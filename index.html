@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+	<head>
+		<title>UFFS Virtual</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="style/main.css">
+	</head>
+	<body>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./script/base/three.module.js",
+					"three/addons/": "./script/addons/"
+				}
+			}
+		</script>
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/OrbitControls.js';
+			import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+			import { RGBELoader } from 'three/addons/RGBELoader.js';
+
+			let camera, scene, renderer;
+			init();
+			render();
+			
+			function init() {
+				const container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 2000 );
+				camera.position.set( -50, 0, 50 );
+				scene = new THREE.Scene();
+
+				new RGBELoader()
+					.setPath( './texture/' )
+					.load( 'pedestrian_overpass_1k.hdr', function ( texture ) {
+
+						texture.mapping = THREE.EquirectangularReflectionMapping;
+						//scene.background = texture;
+
+						scene.environment = texture;
+						render();
+						const loader = new GLTFLoader().setPath( './model/' );
+						loader.load( 'UFFS.glb', function ( glb ) {
+							scene.add( glb.scene );
+							render();
+						} );
+					} );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1;
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				container.appendChild( renderer.domElement );
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render );
+				controls.autoRotate = true;
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				render();
+
+			}
+	
+			function render() {
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
